@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stopwatch — Multi-file</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Stopwatch</h1>
+      <div class="small">Space = Start / Pause · L = Lap · R = Reset</div>
+    </header>
+
+    <div class="timer">
+      <div class="left panel">
+        <div class="display" id="display">00:00.000</div>
+        <div class="btn-row">
+          <button id="startBtn" class="primary">Start</button>
+          <button id="lapBtn">Lap</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+        <div class="helpers">Precision timing using <strong>performance.now()</strong>. Laps are recorded with millisecond accuracy.</div>
+      </div>
+
+      <div class="right panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>Laps</strong>
+          <div class="small" id="lapsCount">0</div>
+        </div>
+        <div class="laps" id="laps"></div>
+        <div class="actions">
+          <button id="exportBtn">Export CSV</button>
+          <button id="clearLapsBtn">Clear Laps</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
