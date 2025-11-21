@@ -1,7 +1,6 @@
 (function() {
   'use strict';
 
-  // DOM elements
   const display = document.getElementById('display');
   const startBtn = document.getElementById('startBtn');
   const lapBtn = document.getElementById('lapBtn');
@@ -11,14 +10,12 @@
   const lapsContainer = document.getElementById('laps');
   const lapsCount = document.getElementById('lapsCount');
 
-  // State
   let running = false;
   let startTime = 0;
   let elapsedBefore = 0;
   let laps = [];
   let animationId = null;
 
-  // Format milliseconds to MM:SS.mmm
   function formatTime(ms) {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -27,74 +24,92 @@
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
   }
 
-  // Update display continuously
   function updateDisplay() {
     const currentMs = elapsedBefore + (performance.now() - startTime);
     display.textContent = formatTime(currentMs);
     if (running) animationId = requestAnimationFrame(updateDisplay);
   }
 
-  // Start stopwatch
   function start() {
     if (running) return;
     running = true;
     startTime = performance.now();
     startBtn.textContent = 'Pause';
     startBtn.classList.remove('primary');
+    lapBtn.disabled = false;
     updateDisplay();
   }
 
-  // Pause stopwatch
   function pause() {
     if (!running) return;
     running = false;
     elapsedBefore += (performance.now() - startTime);
-    startBtn.textContent = 'Start';
+    startBtn.textContent = 'Resume';
     startBtn.classList.add('primary');
     if (animationId) cancelAnimationFrame(animationId);
   }
 
-  // Reset stopwatch
   function reset() {
     pause();
     running = false;
     startTime = 0;
     elapsedBefore = 0;
-    laps = [];
     display.textContent = '00:00.000';
     startBtn.textContent = 'Start';
     startBtn.classList.add('primary');
-    renderLaps();
+    lapBtn.disabled = true;
   }
 
-  // Record lap
   function lap() {
+    if (elapsedBefore === 0 && !running) return;
     const currentMs = elapsedBefore + (running ? (performance.now() - startTime) : 0);
     const lapTime = currentMs - (laps.length ? laps[laps.length - 1].cumulativeMs : 0);
     const entry = {
       index: laps.length + 1,
       time: formatTime(lapTime),
       cumulative: formatTime(currentMs),
-      cumulativeMs: currentMs
+      cumulativeMs: currentMs,
+      lapMs: lapTime
     };
     laps.push(entry);
     renderLaps();
+    highlightFastestSlowest();
   }
 
-  // Render laps list
+  function highlightFastestSlowest() {
+    if (laps.length < 2) return;
+    
+    const lapTimes = laps.map(l => l.lapMs);
+    const fastest = Math.min(...lapTimes);
+    const slowest = Math.max(...lapTimes);
+
+    document.querySelectorAll('.lap').forEach((el, idx) => {
+      const reversedIdx = laps.length - 1 - idx;
+      el.classList.remove('fastest', 'slowest');
+      
+      if (laps[reversedIdx].lapMs === fastest && fastest !== slowest) {
+        el.classList.add('fastest');
+      }
+      if (laps[reversedIdx].lapMs === slowest && fastest !== slowest) {
+        el.classList.add('slowest');
+      }
+    });
+  }
+
   function renderLaps() {
     lapsContainer.innerHTML = '';
     for (let i = laps.length - 1; i >= 0; i--) {
       const l = laps[i];
       const div = document.createElement('div');
       div.className = 'lap';
-      div.innerHTML = `<div>Lap ${l.index}</div><div>${l.time} <span class="small">(Total ${l.cumulative})</span></div>`;
+      div.innerHTML = `<div><strong>Lap ${l.index}</strong></div><div>${l.time} <span class="small">(${l.cumulative})</span></div>`;
       lapsContainer.appendChild(div);
     }
     lapsCount.textContent = laps.length;
+    clearLapsBtn.disabled = laps.length === 0;
+    exportBtn.disabled = laps.length === 0;
   }
 
-  // Export laps to CSV
   function exportCSV() {
     if (!laps.length) {
       alert('No laps to export');
@@ -107,30 +122,34 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'laps.csv';
+    a.download = `stopwatch-laps-${new Date().toISOString().slice(0,10)}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
   }
 
-  // Button listeners
   startBtn.addEventListener('click', () => {
     running ? pause() : start();
   });
   
   lapBtn.addEventListener('click', lap);
   
-  resetBtn.addEventListener('click', reset);
-  
-  clearLapsBtn.addEventListener('click', () => {
+  resetBtn.addEventListener('click', () => {
+    reset();
     laps = [];
     renderLaps();
   });
   
+  clearLapsBtn.addEventListener('click', () => {
+    if (confirm('Clear all lap times?')) {
+      laps = [];
+      renderLaps();
+    }
+  });
+  
   exportBtn.addEventListener('click', exportCSV);
 
-  // Keyboard shortcuts: Space = start/pause, L = lap, R = reset
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
       e.preventDefault();
@@ -142,15 +161,20 @@
     }
     if (e.key.toLowerCase() === 'r') {
       e.preventDefault();
-      reset();
+      if (elapsedBefore > 0 || running) {
+        reset();
+        laps = [];
+        renderLaps();
+      }
     }
   });
 
-  // On page hide (tab close), pause to avoid runaway
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && running) pause();
   });
 
-  // Expose for debugging (optional)
-  window._stopwatch = { start, pause, reset, lap, formatTime };
+  lapBtn.disabled = true;
+  clearLapsBtn.disabled = true;
+  exportBtn.disabled = true;
+
 })();

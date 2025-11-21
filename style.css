@@ -56,11 +56,7 @@ header h1 {
   background: var(--glass);
   padding: 18px;
   border-radius: 12px;
-}
-
-.controls {
-  display: flex;
-  gap: 10px;
+  transition: all 0.2s ease;
 }
 
 button {
@@ -71,6 +67,12 @@ button {
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  background: rgba(6, 182, 212, 0.1);
+  transform: translateY(-1px);
 }
 
 button.primary {
@@ -79,8 +81,17 @@ button.primary {
   border: none;
 }
 
-button:active {
+button.primary:hover {
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+button:active:not(:disabled) {
   transform: translateY(1px);
+}
+
+button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .btn-row {
@@ -116,6 +127,21 @@ button:active {
   border-bottom: 1px dashed rgba(255, 255, 255, 0.03);
   font-size: 14px;
   color: var(--muted);
+  transition: all 0.2s ease;
+}
+
+.lap:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.lap.fastest {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.lap.slowest {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
 }
 
 .small {
@@ -143,5 +169,8 @@ button:active {
   }
   .right {
     width: 100%;
+  }
+  .display {
+    font-size: 40px;
   }
 }
